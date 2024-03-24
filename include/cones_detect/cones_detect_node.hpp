@@ -18,6 +18,9 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
+#include "cuda_utils.h"
+#include "logging.h"
+#include "utils.h"
 #include "cones_detect/cones_detect.hpp"
 
 namespace cones_detect
@@ -32,6 +35,10 @@ public:
 private:
   ConesDetectPtr cones_detect_{nullptr};
   int64_t param_name_{123};
+
+  bool build_engine{false};
+  std::string onnx_path{"model.onnx"};
+  std::string engine_path{"engine.engine"};
 };
 }  // namespace cones_detect
 

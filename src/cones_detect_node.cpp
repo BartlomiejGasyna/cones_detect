@@ -35,6 +35,7 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
   param_name_ = this->declare_parameter("param_name", 456);
 
   build_engine = this->declare_parameter("build_engine", false);
+  show_image = this->declare_parameter("show_image", false);
   onnx_path = this->declare_parameter("model_path", "model.onnx");
   engine_path = this->declare_parameter("engine_path", "engine.engine");
 
@@ -69,7 +70,6 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
 
 void ConesDetectNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
-  std::cout << "Image received" << std::endl;
   cv::Mat frame_cv;
   frame_cv = cv_bridge::toCvCopy(msg, "bgr8")->image;
 
@@ -77,15 +77,16 @@ void ConesDetectNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg
 
 
 
-    // Displaying 'raw' objects
-  for (size_t j = 0; j < detections.size(); j++) {
-      cv::Rect r = get_rect(detections[j].box);
-      cv::rectangle(frame_cv, r, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-      cv::putText(frame_cv, std::to_string((int) detections[j].label), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+  // Displaying 'raw' objects
+  if (show_image){
+    for (size_t j = 0; j < detections.size(); j++) {
+        cv::Rect r = get_rect(detections[j].box);
+        cv::rectangle(frame_cv, r, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+        cv::putText(frame_cv, std::to_string((int) detections[j].label), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+    }
+    cv::imshow("Cones", frame_cv);
+    cv::waitKey(1);
   }
-  cv::imshow("Cones", frame_cv);
-  cv::waitKey(1);
-
   // publish detected bboxes
   cones_interfaces::msg::Cones cones;
   cones.header = msg->header;

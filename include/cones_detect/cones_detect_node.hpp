@@ -39,6 +39,7 @@ private:
   int64_t param_name_{123};
 
   bool build_engine{false};
+  bool show_image{false};
   std::string onnx_path{"model.onnx"};
   std::string engine_path{"engine.engine"};
 

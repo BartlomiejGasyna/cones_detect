@@ -32,7 +32,13 @@ int64_t ConesDetect::foo(int64_t bar) const
   return bar;
 }
 
+void ConesDetect::camera_callback(const sensor_msgs::msg::Image::SharedPtr msg)
+{
+  std::cout << "I heard: " << msg->data.size() << std::endl;
+}
 }  // namespace cones_detect
+
+
 
 using namespace nvinfer1;
 

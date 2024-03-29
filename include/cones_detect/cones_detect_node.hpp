@@ -22,7 +22,9 @@
 #include "logging.h"
 #include "utils.h"
 #include "cones_detect/cones_detect.hpp"
-
+#include <cv_bridge/cv_bridge.h>
+#include "cones_interfaces/msg/bounding_box.hpp" 
+#include "cones_interfaces/msg/cones.hpp" 
 namespace cones_detect
 {
 using ConesDetectPtr = std::unique_ptr<cones_detect::ConesDetect>;
@@ -39,6 +41,13 @@ private:
   bool build_engine{false};
   std::string onnx_path{"model.onnx"};
   std::string engine_path{"engine.engine"};
+
+  void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
+  rclcpp::Publisher<cones_interfaces::msg::Cones>::SharedPtr bboxes_pub_;
+
+  // Inference Engine class
+  Yolo detector;
 };
 }  // namespace cones_detect
 

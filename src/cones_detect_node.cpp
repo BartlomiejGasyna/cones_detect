@@ -13,6 +13,11 @@
 // limitations under the License.
 
 #include "cones_detect/cones_detect_node.hpp"
+#include <sensor_msgs/msg/image.hpp>
+
+#define NMS_THRESH 0.4
+#define CONF_THRESH 0.3
+
 
 cv::Rect get_rect(BBox box) {
     return cv::Rect(round(box.x1), round(box.y1), round(box.x2 - box.x1), round(box.y2 - box.y1));
@@ -21,6 +26,7 @@ cv::Rect get_rect(BBox box) {
 
 namespace cones_detect
 {
+auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
 
 ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
 :  Node("cones_detect", options)
@@ -32,51 +38,76 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
   onnx_path = this->declare_parameter("model_path", "model.onnx");
   engine_path = this->declare_parameter("engine_path", "engine.engine");
 
-  std::cout << "onnx_path: " << onnx_path << std::endl;
-  std::cout << "engine_path: " << engine_path << std::endl;
+  // rclcpp::QoS qos_settings(10);
+  // qos_settings.best_effort();
 
+  image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+    "/sensing/camera/image_raw",
+    custom_qos,
+    std::bind(&ConesDetectNode::imageCallback, this, 
+    std::placeholders::_1));
+
+  bboxes_pub_ = this->create_publisher<cones_interfaces::msg::Cones>("output_bboxes", custom_qos);
+  
+  
   setenv("CUDA_MODULE_LOADING", "LAZY", 1);
 
-  // rclcpp::init(argc, argv);
-  // auto node = std::make_shared<rclcpp::Node>("yolo_publisher");
+  if (build_engine){
+    OptimDim dyn_dim_profile;
+    Yolo::build_engine(onnx_path, engine_path, dyn_dim_profile);
+    std::cout << "Build finished" << std::endl;
+  }
 
-  // auto yellow_pub = node->create_publisher<geometry_msgs::msg::PoseArray>("yellow_cones", 10);
-  // auto blue_pub = node->create_publisher<geometry_msgs::msg::PoseArray>("blue_cones", 10);
-  // auto image_pub = node->create_publisher<sensor_msgs::msg::Image>("cones_img", 1);
-
-  // if (argc == 1) {
-  //       std::cout << "Usage: \n 1. ./yolo_onnx_zed -s yolov8s.onnx yolov8s.engine\n 2. ./yolo_onnx_zed -s yolov8s.onnx yolov8s.engine images:1x3x512x512\n 3. ./yolo_onnx_zed yolov8s.engine <SVO path>" << std::endl;
-  //       return 0;
-  //  }
-    
-
-    if (build_engine){
-  // Check Optim engine first
-  // if (std::string(argv[1]) == "-s" && (argc >= 4)) {
-      // std::string onnx_path = std::string(argv[2]);
-      // std::string engine_path = std::string(argv[3]);
-
-      OptimDim dyn_dim_profile;
-
-      // if (argc == 5) {
-      //     std::string optim_profile = std::string(argv[4]);
-      //     bool error = dyn_dim_profile.setFromString(optim_profile);
-      //     if (error) {
-      //         std::cerr << "Invalid dynamic dimension argument, expecting something like 'images:1x3x512x512'" << std::endl;
-      //         return EXIT_FAILURE;
-      //     }
-      // }
-
-      Yolo::build_engine(onnx_path, engine_path, dyn_dim_profile);
-      std::cout << "Build finished" << std::endl;
-
-  // }
+  if (detector.init(engine_path)) {
+    std::cerr << "Detector init failed" << std::endl;
+  }
+  else {
+    std::cout << "Detector init success" << std::endl;
+  }
 
 }
+
+void ConesDetectNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
+{
+  std::cout << "Image received" << std::endl;
+  cv::Mat frame_cv;
+  frame_cv = cv_bridge::toCvCopy(msg, "bgr8")->image;
+
+  auto detections = detector.run(frame_cv, frame_cv.rows, frame_cv.cols, CONF_THRESH);
+
+
+
+    // Displaying 'raw' objects
+  for (size_t j = 0; j < detections.size(); j++) {
+      cv::Rect r = get_rect(detections[j].box);
+      cv::rectangle(frame_cv, r, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+      cv::putText(frame_cv, std::to_string((int) detections[j].label), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+  }
+  cv::imshow("Cones", frame_cv);
+  cv::waitKey(1);
+
+  // publish detected bboxes
+  cones_interfaces::msg::Cones cones;
+  cones.header = msg->header;
+  for (size_t j = 0; j < detections.size(); j++) {
+    cones_interfaces::msg::BoundingBox bbox;
+    bbox.x1 = detections[j].box.x1;
+    bbox.y1 = detections[j].box.y1;
+    bbox.x2 = detections[j].box.x2;
+    bbox.y2 = detections[j].box.y2;
+    bbox.label = detections[j].label == 0 ? 'Y' : 'B';
+
+    cones.bboxes.push_back(bbox);
+  }
+
+  bboxes_pub_->publish(cones);
 }
+
 
 }  // namespace cones_detect
 
 #include "rclcpp_components/register_node_macro.hpp"
 
 RCLCPP_COMPONENTS_REGISTER_NODE(cones_detect::ConesDetectNode)
+
+

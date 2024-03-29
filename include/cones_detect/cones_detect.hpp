@@ -16,6 +16,7 @@
 #define CONES_DETECT__CONES_DETECT_HPP_
 
 #include <cstdint>
+#include <sensor_msgs/msg/image.hpp>
 
 #include "cones_detect/visibility_control.hpp"
 
@@ -28,9 +29,13 @@ class CONES_DETECT_PUBLIC ConesDetect
 public:
   ConesDetect();
   int64_t foo(int64_t bar) const;
+  void camera_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+
 };
 
 }  // namespace cones_detect
+
+
 
 #include <NvInfer.h>
 // #include <sl/Camera.hpp>

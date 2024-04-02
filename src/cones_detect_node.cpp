@@ -50,6 +50,9 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
 
   bboxes_pub_ = this->create_publisher<cones_interfaces::msg::Cones>("output_bboxes", custom_qos);
   
+  if (show_image){
+  image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("output_image", custom_qos);
+  }
   
   setenv("CUDA_MODULE_LOADING", "LAZY", 1);
 
@@ -84,8 +87,8 @@ void ConesDetectNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg
         cv::rectangle(frame_cv, r, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
         cv::putText(frame_cv, std::to_string((int) detections[j].label), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
     }
-    cv::imshow("Cones", frame_cv);
-    cv::waitKey(1);
+    sensor_msgs::msg::Image::SharedPtr msg_out = cv_bridge::CvImage(msg->header, "bgr8", frame_cv).toImageMsg();
+    image_pub_->publish(*msg_out);
   }
   // publish detected bboxes
   cones_interfaces::msg::Cones cones;

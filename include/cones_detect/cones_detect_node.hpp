@@ -46,7 +46,7 @@ private:
   void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
   rclcpp::Publisher<cones_interfaces::msg::Cones>::SharedPtr bboxes_pub_;
-
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
   // Inference Engine class
   Yolo detector;
 };

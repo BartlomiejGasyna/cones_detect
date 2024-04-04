@@ -17,9 +17,12 @@
 
 #include <cstdint>
 #include <sensor_msgs/msg/image.hpp>
-
 #include "cones_detect/visibility_control.hpp"
-
+#include <NvInfer.h>
+#include <opencv2/opencv.hpp>
+#include "cuda_utils.h"
+#include "logging.h"
+#include "utils.h"
 
 namespace cones_detect
 {
@@ -29,21 +32,10 @@ class CONES_DETECT_PUBLIC ConesDetect
 public:
   ConesDetect();
   int64_t foo(int64_t bar) const;
-  void camera_callback(const sensor_msgs::msg::Image::SharedPtr msg);
-
 };
 
 }  // namespace cones_detect
 
-
-
-#include <NvInfer.h>
-// #include <sl/Camera.hpp>
-#include <opencv2/opencv.hpp>
-
-#include "cuda_utils.h"
-#include "logging.h"
-#include "utils.h"
 
 enum class YOLO_MODEL_VERSION_OUTPUT_STYLE {
     YOLOV6,

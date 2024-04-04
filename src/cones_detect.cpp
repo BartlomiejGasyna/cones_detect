@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cones_detect/cones_detect.hpp"
-
 #include <iostream>
-
-// #include "cones_detect/cones_detect.hpp"
 #include "NvOnnxParser.h"
+#include "cones_detect/cones_detect.hpp"
 
 namespace cones_detect
 {
@@ -32,10 +29,6 @@ int64_t ConesDetect::foo(int64_t bar) const
   return bar;
 }
 
-void ConesDetect::camera_callback(const sensor_msgs::msg::Image::SharedPtr msg)
-{
-  std::cout << "I heard: " << msg->data.size() << std::endl;
-}
 }  // namespace cones_detect
 
 

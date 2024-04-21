@@ -14,6 +14,7 @@
 
 #include "cones_detect/cones_detect_node.hpp"
 #include <sensor_msgs/msg/image.hpp>
+#include <filesystem>
 
 #define NMS_THRESH 0.4
 #define CONF_THRESH 0.3
@@ -55,6 +56,12 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
   }
   
   setenv("CUDA_MODULE_LOADING", "LAZY", 1);
+
+
+  if (!std::filesystem::exists(engine_path))
+  {
+    build_engine = true;
+  }
 
   if (build_engine){
     OptimDim dyn_dim_profile;

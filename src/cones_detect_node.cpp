@@ -40,8 +40,6 @@ ConesDetectNode::ConesDetectNode(const rclcpp::NodeOptions & options)
   onnx_path = this->declare_parameter("model_path", "model.onnx");
   engine_path = this->declare_parameter("engine_path", "engine.engine");
 
-  // rclcpp::QoS qos_settings(10);
-  // qos_settings.best_effort();
 
   image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
     "/sensing/camera/image_raw",

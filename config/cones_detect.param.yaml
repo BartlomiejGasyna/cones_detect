@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     param_name: 789
-    build_engine: true
+    build_engine: false
     show_image: true
-    model_path: "src/cones_detect/src/best_nano.onnx"
-    engine_path: "src/cones_detect/src/best_nano.engine"
+    model_path: "universe/external/cones_detect/src/best_nano.onnx"
+    engine_path: "universe/external/cones_detect/src/best_nano.engine"
